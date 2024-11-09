@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
@@ -58,8 +56,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -326,9 +322,9 @@ class MainActivity : ComponentActivity() {
                             onDismiss = {
                                 spotLightVisibility = false
                             }, onProceed = {
-                                val currentRoute = routes.indexOfFirst { it.name == currentRoute }
-                                if (currentRoute != -1 && currentRoute < routes.size - 1) {
-                                    navController.navigate(routes[currentRoute + 1].name) {
+                                val route = routes.indexOfFirst { it.name == currentRoute }
+                                if (route != -1 && route < routes.size - 1) {
+                                    navController.navigate(routes[route + 1].name) {
                                         popUpTo(Route.HOME.name) {
                                             saveState = true
                                         }
