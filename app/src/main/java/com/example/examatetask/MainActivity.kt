@@ -12,7 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
@@ -60,6 +58,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -112,42 +111,28 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
-                            Column {
-                                AnimatedVisibility(visible = spotLightVisibility) {
-                                    ToolTip(
-                                        modifier = Modifier
-                                            .onGloballyPositioned {
-                                                targetRect2 = it.boundsInRoot()
-                                            },
-                                        text = "This is the ${selectedRoute?.title} Screen",
-                                        arrowPosition = when (selectedRoute) {
-                                            Route.HOME -> ArrowPosition.Start
-                                            Route.CONNECTOR -> ArrowPosition.Start
-                                            Route.QUESTIONS -> ArrowPosition.Center
-                                            Route.PROFILE -> ArrowPosition.End
-                                            Route.TOOLS -> ArrowPosition.End
-                                            else -> ArrowPosition.Start
+                            NavigationBar {
+                                routes.forEach { route ->
+                                    NavigationItem(
+                                        modifier = Modifier.onGloballyPositioned {
+                                            if (navController.currentDestination?.route == route.name)
+                                                targetRect = it.boundsInRoot()
                                         },
-                                        paddingOffset = padding
+                                        isSelected = navController.currentDestination?.route == route.name,
+                                        route = route,
+                                        onClick = {
+                                            navController.navigate(route.name) {
+                                                popUpTo(Route.HOME.name) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
                                     )
                                 }
-
-                                NavigationBar {
-                                    routes.forEach { route ->
-                                        NavigationItem(
-                                            modifier = Modifier.onGloballyPositioned {
-                                                if (navController.currentDestination?.route == route.name)
-                                                    targetRect = it.boundsInRoot()
-                                            },
-                                            isSelected = navController.currentDestination?.route == route.name,
-                                            route = route,
-                                            onClick = {
-                                                navController.navigate(route.name)
-                                            }
-                                        )
-                                    }
-                                }
                             }
+                            //  }
                         }
                     ) { innerPadding ->
                         NavHost(
@@ -155,18 +140,26 @@ class MainActivity : ComponentActivity() {
                                 .padding(innerPadding)
                                 .fillMaxSize(),
                             navController = navController,
-                            startDestination = Route.HOME.name
-                        ) {
+                            startDestination = Route.HOME.name,
+
+                            ) {
                             composable(route = Route.HOME.name) {
                                 HomeRoute(
-                                    modifier = Modifier.fillMaxSize()
-                                    , items = listOf(
+                                    modifier = Modifier.fillMaxSize(), items = listOf(
                                         StudyUnit(id = 1, title = "Introduction", isLocked = false),
                                         StudyUnit(id = 2, title = "Unit 1", isLocked = true),
                                         StudyUnit(id = 3, title = "Unit 2", isLocked = true),
                                         StudyUnit(id = 4, title = "Unit 3", isLocked = true),
-
-                                        )
+                                        StudyUnit(id = 2, title = "Unit 4", isLocked = true),
+                                        StudyUnit(id = 3, title = "Unit 5", isLocked = true),
+                                        StudyUnit(id = 4, title = "Unit 6", isLocked = true),
+                                        StudyUnit(id = 2, title = "Unit 7", isLocked = true),
+                                        StudyUnit(id = 3, title = "Unit 8", isLocked = true),
+                                        StudyUnit(id = 4, title = "Unit 9", isLocked = true),
+                                        StudyUnit(id = 2, title = "Unit 10", isLocked = true),
+                                        StudyUnit(id = 3, title = "Unit 11", isLocked = true),
+                                        StudyUnit(id = 4, title = "Unit 12", isLocked = true),
+                                    )
                                 )
                             }
                             composable(route = Route.PROFILE.name) {
@@ -178,9 +171,7 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(route = Route.QUESTIONS.name) {
                                 QuestionsRoute(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(innerPadding),
+                                    modifier = Modifier.fillMaxSize(),
                                     questionsCategories = listOf(
                                         QuestionsCategory(
                                             questionsNum = 10,
@@ -305,7 +296,28 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
+                    AnimatedVisibility(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(bottom = 82.dp),
+                        visible = spotLightVisibility
+                    ) {
+                        ToolTipBox(
+                            modifier = Modifier,
+                            text = "This is the ${selectedRoute?.title} Screen",
+                            arrowPosition = when (selectedRoute) {
+                                Route.HOME -> ArrowPosition.Start
+                                Route.CONNECTOR -> ArrowPosition.Start
+                                Route.QUESTIONS -> ArrowPosition.Center
+                                Route.PROFILE -> ArrowPosition.End
+                                Route.TOOLS -> ArrowPosition.End
+                                else -> ArrowPosition.Start
+                            },
+                            paddingOffset = padding,
+                            cardOffset = {
+                                targetRect2 = it
+                            })
+                    }
                     targetRect?.let {
                         Spotlight(
                             targetRect = it,
@@ -316,17 +328,22 @@ class MainActivity : ComponentActivity() {
                             }, onProceed = {
                                 val currentRoute = routes.indexOfFirst { it.name == currentRoute }
                                 if (currentRoute != -1 && currentRoute < routes.size - 1) {
-                                    navController.navigate(routes[currentRoute + 1].name)
+                                    navController.navigate(routes[currentRoute + 1].name) {
+                                        popUpTo(Route.HOME.name) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 } else {
                                     spotLightVisibility = false
                                 }
                             }
                         )
                     }
-                    WelcomeOverlay(welcomeOverlayVisibility){
+                    WelcomeOverlay(welcomeOverlayVisibility) {
                         welcomeOverlayVisibility = false
                     }
-
                 }
             }
         }
@@ -365,7 +382,7 @@ fun Spotlight(
                 }
 
                 clipPath(path = spotlightPath, clipOp = ClipOp.Difference) {
-                    drawRect(Color.Black.copy(alpha = 0.8f))
+                    drawRect(Color.Black.copy(alpha = 0.6f))
                 }
             }
 
@@ -391,6 +408,64 @@ fun Spotlight(
     }
 }
 
+
+@Composable
+fun ToolTipBox(
+    modifier: Modifier,
+    text: String,
+    arrowPosition: ArrowPosition,
+    paddingOffset: Dp,
+    cardOffset: (Rect) -> Unit,
+) {
+
+    Box(
+        modifier = modifier.padding(start = paddingOffset)
+    ) {
+        Card(
+            modifier = Modifier
+                .onGloballyPositioned {
+                    cardOffset(it.boundsInRoot())
+                }
+                .align(Alignment.TopCenter),
+            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF1F2937))
+        ) {
+            Text(
+                modifier = Modifier
+                    .width(200.dp)
+                    .padding(8.dp),
+                text = text
+            )
+        }
+
+        // Draw arrow below the card
+        Canvas(
+            modifier = Modifier
+                .offset(y = (30).dp)
+                .size(
+                    width = 80.dp,
+                    height = 40.dp
+                )
+        ) {
+            val arrowWidth = 80f
+            val arrowHeight = 40f
+            val startX = when (arrowPosition) {
+                ArrowPosition.End -> (size.width + (arrowWidth * 2)) - 8f
+                ArrowPosition.Center -> (size.width / 2) + arrowWidth
+                ArrowPosition.Start -> 38f
+            }
+
+            val path = Path().apply {
+                moveTo(startX, 0f) // top left
+                lineTo(startX + (arrowWidth / 2), arrowHeight) // bottom mid
+                lineTo(startX + arrowWidth, 0f) // top right
+                close()
+            }
+            drawPath(path, color = Color(0xFF1F2937))
+        }
+    }
+
+}
+/*
 @Composable
 fun ToolTip(modifier: Modifier, text: String, arrowPosition: ArrowPosition, paddingOffset: Dp) {
     ConstraintLayout(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -416,7 +491,10 @@ fun ToolTip(modifier: Modifier, text: String, arrowPosition: ArrowPosition, padd
         }
 
         Canvas(
-            modifier = Modifier.padding(start = paddingOffset)
+            modifier = Modifier
+                .padding(start = paddingOffset)
+                .size(48.dp)
+                .zIndex(2f)
 
                 .constrainAs(arrow) {
                     top.linkTo(card.bottom)
@@ -435,13 +513,14 @@ fun ToolTip(modifier: Modifier, text: String, arrowPosition: ArrowPosition, padd
                         ArrowPosition.Start -> paddingOffset
                         ArrowPosition.Center -> paddingOffset / 2
                         ArrowPosition.End -> 0.dp
-                    }
+                    },
+                    *//*y = (-50).dp*//*
                 )
         ) {
             drawBottomTriangle(arrowWidth = 80f, arrowHeight = 40f, position = arrowPosition)
         }
     }
-}
+}*/
 
 @Composable
 private fun RowScope.NavigationItem(

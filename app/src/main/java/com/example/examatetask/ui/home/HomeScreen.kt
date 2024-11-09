@@ -63,7 +63,7 @@ fun HomeScreenPreview() {
             StudyUnit(id = 2, title = "Advanced Algebra", isLocked = true),
             StudyUnit(id = 3, title = "Geometry Fundamentals", isLocked = true)
         ),
-        )
+    )
 }
 
 

@@ -25,7 +25,8 @@ fun WelcomeOverlay(
     isVisible: Boolean,
     onClick: () -> Unit
 ) {
-    AnimatedVisibility(isVisible,
+    AnimatedVisibility(
+        isVisible,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
@@ -44,13 +45,14 @@ fun WelcomeOverlay(
             ) {
                 Text(
                     text = "Welcome to: How to use and enjoy Examate",
+                    color = Color.White,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
                     text = "Tap anywhere on the screen to continue",
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineMedium
                 )
             }

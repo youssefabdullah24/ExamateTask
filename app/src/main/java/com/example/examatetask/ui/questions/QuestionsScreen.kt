@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -52,7 +55,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +68,21 @@ import com.example.examatetask.Spotlight
 import com.example.examatetask.drawBottomTriangle
 import kotlinx.coroutines.launch
 
+data class QuestionOral(
+    val category: String,
+    val taskNumber: Int,
+    val answersNumber: Int,
+    val date: String,
+    val questionBullets: List<String>,
+)
+
+data class QuestionsCategory(
+    val questionsNum: Int,
+    val answeredQuestions: Int,
+    val categoryName: String
+)
+
+
 @Composable
 fun QuestionsRoute(
     modifier: Modifier,
@@ -77,74 +94,6 @@ fun QuestionsRoute(
         questionsCategories = questionsCategories,
         questionOrals = oralCategories
     )
-}
-
-
-data class QuestionsCategory(
-    val questionsNum: Int,
-    val answeredQuestions: Int,
-    val categoryName: String
-)
-
-@Composable
-fun ToolTip2(
-    modifier: Modifier, text: String,
-    arrowPosition: ArrowPosition,
-    xPaddingOffset: Dp,
-    yPaddingOffset: Dp
-) {
-    ConstraintLayout {
-        val (card, arrow) = createRefs()
-        Card(
-            modifier = modifier
-                .wrapContentWidth()
-                .wrapContentHeight()
-                .padding(top = yPaddingOffset)
-                .constrainAs(card) {
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                },
-
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF1F2937))
-        ) {
-            Text(
-                modifier = modifier
-                    .offset(y = -yPaddingOffset, x = -xPaddingOffset)
-                    .width(180.dp)
-                    .padding(8.dp),
-                text = text,
-            )
-        }
-
-        Canvas(
-            modifier = Modifier
-                .constrainAs(arrow) {
-                    top.linkTo(card.bottom)
-                    when (arrowPosition) {
-                        ArrowPosition.Start -> start.linkTo(card.start)
-                        ArrowPosition.Center -> {
-                            start.linkTo(card.start)
-                            end.linkTo(card.end)
-                        }
-
-                        ArrowPosition.End -> end.linkTo(card.end)
-                    }
-                }
-
-                .offset(
-                    x = when (arrowPosition) {
-                        ArrowPosition.Start -> xPaddingOffset + 10f.dp
-                        ArrowPosition.Center -> xPaddingOffset / 2
-                        ArrowPosition.End -> 0.dp
-                    }, y = yPaddingOffset
-                )
-        ) {
-            drawBottomTriangle(arrowWidth = 80f, arrowHeight = 40f, position = arrowPosition)
-        }
-
-    }
-
 }
 
 
@@ -204,16 +153,19 @@ fun QuestionsCategoryGrid(
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier,
+            contentPadding = PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(questionsCategories.size) {
+            items(questionsCategories.size) { index ->
                 QuestionsCategoryGridItem(
-                    questionsCategory = questionsCategories[it],
+                    questionsCategory = questionsCategories[index],
                     modifier = Modifier
                         .fillMaxSize()
                         .onGloballyPositioned {
-                            rect = it.boundsInParent()
+                            if (index == 2) {
+                                rect = it.boundsInParent()
+                            }
                         },
                 )
 
@@ -275,7 +227,10 @@ fun QuestionsScreen(
                 )
             }
 
-            HorizontalPager(modifier = Modifier.fillMaxSize(), state = pagerState) { page ->
+            HorizontalPager(
+                modifier = Modifier.fillMaxSize(),
+                state = pagerState
+            ) { page ->
                 when (page) {
                     0 -> QuestionsCategoryGrid(
                         modifier = Modifier.fillMaxSize(),
@@ -312,20 +267,31 @@ fun QuestionCard(
             }
         )
     }
-    Card(modifier = modifier) {
-        Column(modifier = Modifier.padding(8.dp)) {
+
+    Card(
+        modifier = modifier
+            .wrapContentHeight()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy((16.dp)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
+                    color = MaterialTheme.colorScheme.inversePrimary,
                     text = questionOral.category,
                     modifier = Modifier
                         .background(Color.LightGray)
                         .padding(2.dp)
                 )
                 Text(
+                    color = MaterialTheme.colorScheme.inversePrimary,
                     text = "Task ${questionOral.taskNumber}",
                     modifier = Modifier
                         .background(Color.LightGray)
@@ -344,7 +310,7 @@ fun QuestionCard(
                 text = questionBullets
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -356,11 +322,10 @@ fun QuestionCard(
                 Text(text = "${questionOral.answersNumber} answers")
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    modifier = Modifier
-                        .alpha(0.8f), text = "Date: ${questionOral.date}"
+                    modifier = Modifier.alpha(0.8f),
+                    text = "Date: ${questionOral.date}"
                 )
             }
-
         }
     }
 }
@@ -376,36 +341,40 @@ fun QuestionsOralColumn(
     Box(
         modifier = modifier,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-                .scrollable(orientation = Orientation.Vertical,
-                    state = rememberScrollState()),
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .scrollable(
+                    orientation = Orientation.Vertical,
+                    state = rememberScrollState()
+                ),
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
-            Button(
-                modifier = Modifier
-                    .onGloballyPositioned {
-                        rect11 = it.boundsInParent()
-                    },
-                onClick = { },
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Row {
-                    Text(
-                        text = "Filter",
-                        color = MaterialTheme.colorScheme.inversePrimary,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Create,
-                        contentDescription = "Filter",
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.inversePrimary
-                    )
+            item {
+                Spacer(modifier = Modifier.height(100.dp))
+                Button(
+                    modifier = Modifier
+                        .onGloballyPositioned {
+                            rect11 = it.boundsInParent()
+                        },
+                    onClick = { },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row {
+                        Text(
+                            text = "Filter",
+                            color = MaterialTheme.colorScheme.inversePrimary,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Create,
+                            contentDescription = "Filter",
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.inversePrimary
+                        )
+                    }
                 }
             }
-
-            questionOrals.forEach { questionOral ->
+            items(items = questionOrals) { questionOral ->
                 QuestionCard(
                     modifier = Modifier.padding(8.dp),
                     questionOral
@@ -420,7 +389,7 @@ fun QuestionsOralColumn(
             onDismiss = { showHints = false },
             showSpotlight = showHints
         )
-        if(showHints) {
+        if (showHints) {
             ToolTip2(
                 modifier = Modifier.offset(y = 25.dp, x = 0.dp),
                 text = "Grid Item",
@@ -481,11 +450,63 @@ fun QuestionsScreenPreview() {
 }
 
 
-data class QuestionOral(
-    val category: String,
-    val taskNumber: Int,
-    val answersNumber: Int,
-    val date: String,
-    val questionBullets: List<String>,
-)
+@Composable
+fun ToolTip2(
+    modifier: Modifier, text: String,
+    arrowPosition: ArrowPosition,
+    xPaddingOffset: Dp,
+    yPaddingOffset: Dp
+) {
+    ConstraintLayout {
+        val (card, arrow) = createRefs()
+        Card(
+            modifier = modifier
+                .wrapContentWidth()
+                .wrapContentHeight()
+                .padding(top = yPaddingOffset)
+                .constrainAs(card) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                },
 
+            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF1F2937))
+        ) {
+            Text(
+                modifier = modifier
+                    .offset(y = -yPaddingOffset, x = -xPaddingOffset)
+                    .width(180.dp)
+                    .padding(8.dp),
+                text = text,
+            )
+        }
+
+        Canvas(
+            modifier = Modifier
+                .constrainAs(arrow) {
+                    top.linkTo(card.bottom)
+                    when (arrowPosition) {
+                        ArrowPosition.Start -> start.linkTo(card.start)
+                        ArrowPosition.Center -> {
+                            start.linkTo(card.start)
+                            end.linkTo(card.end)
+                        }
+
+                        ArrowPosition.End -> end.linkTo(card.end)
+                    }
+                }
+
+                .offset(
+                    x = when (arrowPosition) {
+                        ArrowPosition.Start -> xPaddingOffset + 10f.dp
+                        ArrowPosition.Center -> xPaddingOffset / 2
+                        ArrowPosition.End -> 0.dp
+                    }, y = yPaddingOffset
+                )
+        ) {
+            drawBottomTriangle(arrowWidth = 80f, arrowHeight = 40f, position = arrowPosition)
+        }
+
+    }
+
+}
